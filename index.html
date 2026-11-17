@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07101e" />
+    <meta
+      name="description"
+      content="霓虹十一城：一款原创 3D 街头漂移竞速游戏。方向键驾驶，Shift 漂移，Ctrl 氮气加速。"
+    />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <title>霓虹十一城 · NEON CITY 11</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="3D 赛车游戏画面"></canvas>
+      <div class="scene-shade" aria-hidden="true"></div>
+      <div class="film-grain" aria-hidden="true"></div>
+      <div class="speed-vignette" id="speed-vignette" aria-hidden="true"></div>
+
+      <div id="loading-screen" class="screen loading-screen">
+        <div class="loader-mark" aria-hidden="true">
+          <svg viewBox="0 0 90 42" role="presentation">
+            <path d="M4 31 21 9h21l9 10h23L62 37H11Z" />
+            <path d="M38 31 50 15h14l-8 10h12L59 35H35Z" />
+          </svg>
+        </div>
+        <p class="eyebrow">NEON CITY · CIRCUIT 11</p>
+        <h1>霓虹十一城</h1>
+        <div class="loading-track"><span id="loading-bar"></span></div>
+        <p class="loading-copy"><span id="loading-percent">0</span>% <span id="loading-label">正在构建赛道</span></p>
+        <p class="loading-tip">提示：漂移时间越长，氮气集得越多</p>
+      </div>
+
+      <main id="lobby" class="screen lobby hidden" aria-label="主菜单">
+        <header class="lobby-top">
+          <div class="brand-lockup">
+            <span class="brand-glyph" aria-hidden="true">
+              <svg viewBox="0 0 58 28" role="presentation">
+                <path d="m2 21 11-14h14l6 7h15L36 25H6Z" />
+                <path d="m23 21 8-10h9l-5 6h8l-8 8H21Z" />
+              </svg>
+            </span>
+            <span>
+              <strong>NEON<br />SPEED</strong>
+              <small>非官方同人竞速</small>
+            </span>
+          </div>
+          <div class="lobby-meta">
+            <span class="live-dot"></span>
+            <span>单人竞速</span>
+            <span class="meta-divider"></span>
+            <span>6 车手</span>
+            <span class="meta-divider"></span>
+            <span>2 圈</span>
+          </div>
+          <div class="lobby-actions">
+            <button id="audio-toggle" class="icon-button" type="button" aria-label="静音" title="声音 (M)">
+              <svg class="icon-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm12.5 3a4.5 4.5 0 0 0-2-3.74v7.48A4.5 4.5 0 0 0 16.5 12Zm-2-7.7v2.06a7 7 0 0 1 0 11.28v2.06a9 9 0 0 0 0-15.4Z"/></svg>
+              <svg class="icon-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm13.7.3 1.4 1.4-1.7 1.8 1.7 1.7-1.4 1.4-1.8-1.7-1.7 1.7-1.4-1.4 1.7-1.8-1.7-1.7 1.4-1.4 1.8 1.7 1.7-1.7Z"/></svg>
+            </button>
+            <button id="fullscreen-toggle" class="icon-button" type="button" aria-label="全屏" title="全屏 (F)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5v2H6v3H4Zm11-5h5v5h-2V6h-3V4ZM4 15h2v3h3v2H4v-5Zm14 0h2v5h-5v-2h3v-3Z"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <section class="hero-copy">
+          <div class="hero-index">
+            <span>11</span>
+            <i></i>
+            <small>CITY<br />CIRCUIT</small>
+          </div>
+          <p class="kicker"><span></span> 东海湾 · 黄昏 19:42</p>
+          <h1 class="hero-title" aria-label="霓虹十一城">
+            <span class="title-cn">霓虹十一城</span>
+            <span class="title-en">NEON ELEVEN CITY</span>
+          </h1>
+          <p class="hero-desc">
+            贴着海岸线飞驰，穿过霓虹隧道与高架桥。<br />
+            一次果断的断位漂移，就是反超的答案。
+          </p>
+          <div class="hero-cta">
+            <button id="start-button" class="start-button" type="button">
+              <span class="start-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5-12-7.5Z"/></svg>
+              </span>
+              <span class="start-text">
+                <strong>开始比赛</strong>
+                <small>ENTER THE RACE</small>
+              </span>
+              <span class="start-key">ENTER</span>
+            </button>
+            <button id="controls-button" class="text-button" type="button">
+              操作说明
+              <span class="key-chip">?</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="car-select" aria-label="赛车涂装选择">
+          <div class="car-select-title">
+            <span>车库</span>
+            <strong id="car-name">逐星 · STAR CHASER</strong>
+            <small>选择你的涂装</small>
+          </div>
+          <div class="livery-list" role="radiogroup" aria-label="赛车涂装">
+            <button class="livery is-active" type="button" data-car="0" role="radio" aria-checked="true" aria-label="逐星蓝">
+              <span style="--swatch: #16d9ff"></span><em>逐星蓝</em>
+            </button>
+            <button class="livery" type="button" data-car="1" role="radio" aria-checked="false" aria-label="赤焰红">
+              <span style="--swatch: #ff3c65"></span><em>赤焰红</em>
+            </button>
+            <button class="livery" type="button" data-car="2" role="radio" aria-checked="false" aria-label="极夜紫">
+              <span style="--swatch: #a662ff"></span><em>极夜紫</em>
+            </button>
+            <button class="livery" type="button" data-car="3" role="radio" aria-checked="false" aria-label="熔金">
+              <span style="--swatch: #ffb31a"></span><em>熔金</em>
+            </button>
+          </div>
+        </section>
+
+        <footer class="lobby-footer">
+          <div class="quick-controls">
+            <span class="quick-label">快速操作</span>
+            <span><kbd>↑</kbd><kbd>↓</kbd> 油门 / 刹车</span>
+            <span><kbd>←</kbd><kbd>→</kbd> 转向</span>
+            <span><kbd>SHIFT</kbd> 漂移</span>
+            <span><kbd>CTRL</kbd> 氮气</span>
+          </div>
+          <div class="record">
+            <span>本地最佳</span>
+            <strong id="best-time">--:--.---</strong>
+          </div>
+          <p class="fan-note">原创同人作品 · 与腾讯及 QQ 飞车官方无关联</p>
+        </footer>
+
+        <div class="speed-lines" aria-hidden="true"></div>
+        <div class="corner-bracket bracket-tl" aria-hidden="true"></div>
+        <div class="corner-bracket bracket-br" aria-hidden="true"></div>
+      </main>
+
+      <section id="hud" class="screen hud hidden" aria-label="比赛 HUD">
+        <header class="hud-top">
+          <div class="race-status panel">
+            <div class="position-block">
+              <span class="data-label">POSITION</span>
+              <strong><span id="position-value">6</span><small id="position-total">/6</small></strong>
+            </div>
+            <div class="status-rule"></div>
+            <div class="lap-block">
+              <span class="data-label">LAP</span>
+              <strong><span id="lap-value">1</span><small>/2</small></strong>
+            </div>
+            <div class="time-block">
+              <span class="data-label">RACE TIME</span>
+              <strong id="race-time">00:00.000</strong>
+              <small id="lap-time">LAP 00:00.000</small>
+            </div>
+          </div>
+
+          <div class="track-name-badge">
+            <span>NEON CITY</span>
+            <strong>十一城</strong>
+            <i></i>
+            <small>2 LAPS · 5.4 KM</small>
+          </div>
+
+          <div class="minimap-panel panel">
+            <div class="minimap-head">
+              <span>TRACK MAP</span>
+              <span class="minimap-legend"><i class="legend-player"></i> 你</span>
+            </div>
+            <canvas id="minimap" width="360" height="252" aria-label="赛道小地图"></canvas>
+            <div class="minimap-corner">N</div>
+          </div>
+        </header>
+
+        <div class="center-feed" aria-live="polite">
+          <div id="countdown" class="countdown hidden"><span>3</span></div>
+          <div id="race-callout" class="race-callout hidden">
+            <span id="callout-kicker">RACE</span>
+            <strong id="callout-main">START</strong>
+            <small id="callout-sub"></small>
+          </div>
+          <div id="drift-toast" class="drift-toast">
+            <span id="drift-grade">GOOD</span>
+            <strong id="drift-points">+8</strong>
+            <small id="drift-label">漂移集气</small>
+          </div>
+          <div id="wrong-way" class="wrong-way hidden">WRONG WAY <span>请调头</span></div>
+        </div>
+
+        <div class="hud-bottom">
+          <div class="input-feedback">
+            <div class="gear-panel">
+              <span class="data-label">GEAR</span>
+              <strong id="gear-value">1</strong>
+            </div>
+            <div class="drift-readout">
+              <div class="drift-head"><span>DRIFT</span><strong id="drift-combo">READY</strong></div>
+              <div class="drift-meter"><span id="drift-charge"></span></div>
+              <small><kbd>SHIFT</kbd> 按住漂移 · 松开放气</small>
+            </div>
+          </div>
+
+          <div class="nitro-cluster">
+            <div class="nitro-label-row">
+              <span><i class="boost-icon"></i> NITRO</span>
+              <span id="nitro-percent">0%</span>
+            </div>
+            <div class="nitro-bar" role="meter" aria-label="氮气储量" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <span id="nitro-fill"></span>
+              <div class="nitro-ticks" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+              <em id="nitro-flare"></em>
+            </div>
+            <div class="nitro-hint"><kbd>CTRL</kbd> 释放氮气</div>
+          </div>
+
+          <div class="speed-cluster">
+            <div class="speed-dial">
+              <svg viewBox="0 0 200 200" aria-hidden="true">
+                <defs>
+                  <linearGradient id="speed-gradient" x1="0" y1="1" x2="1" y2="0">
+                    <stop offset="0" stop-color="#1ae8ff" />
+                    <stop offset="0.62" stop-color="#f6d65a" />
+                    <stop offset="1" stop-color="#ff3d72" />
+                  </linearGradient>
+                </defs>
+                <circle class="dial-bg" cx="100" cy="100" r="82" />
+                <circle id="speed-arc" class="dial-value" cx="100" cy="100" r="82" />
+                <g class="dial-ticks" id="dial-ticks"></g>
+              </svg>
+              <div class="speed-value">
+                <span class="speed-data">
+                  <strong id="speed-value">0</strong>
+                  <small>KM/H</small>
+                </span>
+                <span class="gear-mini">GEAR <b id="gear-mini">1</b></span>
+              </div>
+              <div class="boost-pill" id="boost-pill">NITRO BOOST</div>
+            </div>
+            <div class="speed-meta">
+              <span><i></i> 极速 <strong id="top-speed">0</strong></span>
+              <span>DRIFT SCORE <strong id="score-value">0</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-right-tools">
+          <button id="pause-button" class="hud-icon-button" type="button" aria-label="暂停">
+            <svg viewBox="0 0 24 24"><path d="M7 5h4v14H7V5Zm6 0h4v14h-4V5Z"/></svg>
+          </button>
+          <button id="camera-button" class="hud-icon-button" type="button" aria-label="切换视角" title="切换视角 (C)">
+            <svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v10H4V8Zm8 2.2a3.3 3.3 0 1 0 0 6.6 3.3 3.3 0 0 0 0-6.6Z"/></svg>
+          </button>
+        </div>
+
+        <div class="touch-controls" id="touch-controls" aria-label="触摸操控">
+          <div class="touch-steer">
+            <button class="touch-button" type="button" data-control="left" aria-label="向左">
+              <svg viewBox="0 0 24 24"><path d="m15 4-8 8 8 8V4Z"/></svg>
+            </button>
+            <button class="touch-button" type="button" data-control="right" aria-label="向右">
+              <svg viewBox="0 0 24 24"><path d="m9 4 8 8-8 8V4Z"/></svg>
+            </button>
+          </div>
+          <div class="touch-pedals">
+            <button class="touch-button touch-drift" type="button" data-control="drift" aria-label="漂移">漂移</button>
+            <button class="touch-button touch-nitro" type="button" data-control="nitro" aria-label="氮气">氮气</button>
+            <button class="touch-button touch-brake" type="button" data-control="brake" aria-label="刹车">
+              <svg viewBox="0 0 24 24"><path d="M6 4h12v16H6V4Zm3 3v10h6V7H9Z"/></svg>
+            </button>
+            <button class="touch-button touch-throttle" type="button" data-control="throttle" aria-label="油门">
+              <svg viewBox="0 0 24 24"><path d="M12 4 4 15h5v5h6v-5h5L12 4Z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="hud-hint" id="hud-hint"><kbd>ESC</kbd> 暂停 <span></span> <kbd>C</kbd> 视角 <span></span> <kbd>R</kbd> 复位</div>
+      </section>
+
+      <section id="controls-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="controls-title">
+        <div class="modal-backdrop" data-close-modal></div>
+        <div class="modal-card controls-card">
+          <button class="modal-close" type="button" data-close-modal aria-label="关闭">
+            <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+          </button>
+          <p class="eyebrow">DRIVER BRIEFING</p>
+          <h2 id="controls-title">键位与漂移</h2>
+          <div class="control-grid">
+            <div class="control-item">
+              <div class="keys"><kbd>W</kbd><kbd>↑</kbd></div>
+              <strong>油门</strong><span>持续加速，松开后逐渐减速</span>
+            </div>
+            <div class="control-item">
+              <div class="keys"><kbd>S</kbd><kbd>↓</kbd></div>
+              <strong>刹车 / 倒车</strong><span>入弯前点刹可以收紧走线</span>
+            </div>
+            <div class="control-item">
+              <div class="keys"><kbd>A</kbd><kbd>D</kbd><kbd>←</kbd><kbd>→</kbd></div>
+              <strong>转向</strong><span>高速时转向幅度会自动收窄</span>
+            </div>
+            <div class="control-item feature-control">
+              <div class="keys"><kbd>SHIFT</kbd></div>
+              <strong>漂移 / 松开放气</strong><span>方向 + Shift 起漂；漂移越久，松手时集气越多</span>
+            </div>
+            <div class="control-item feature-control">
+              <div class="keys"><kbd>CTRL</kbd></div>
+              <strong>氮气加速</strong><span>集满 25% 即可释放，速度与加速度大幅提升</span>
+            </div>
+            <div class="control-item">
+              <div class="keys"><kbd>R</kbd><kbd>C</kbd><kbd>ESC</kbd></div>
+              <strong>复位 / 视角 / 暂停</strong><span>R 回到赛道，C 切换车后与车头视角</span>
+            </div>
+          </div>
+          <div class="drift-tips">
+            <strong>漂移要诀</strong>
+            <p>轻点方向进入弯道 → 按住 <kbd>SHIFT</kbd> 起漂 → 保持漂移角度 → 出弯松手获得氮气。漂移中反打方向可以收紧线路；贴边漂移会得到额外分数。</p>
+          </div>
+          <p class="control-support">手柄：RT 油门 · LT 刹车 · RB 漂移 · A 氮气 &nbsp;|&nbsp; 手机端支持触控与横屏游玩</p>
+          <button class="primary-button" type="button" data-close-modal>明白了</button>
+        </div>
+      </section>
+
+      <section id="pause-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card pause-card">
+          <p class="eyebrow">RACE PAUSED</p>
+          <h2 id="pause-title">比赛暂停</h2>
+          <div class="pause-stats">
+            <div><span>当前名次</span><strong id="pause-position">6 / 6</strong></div>
+            <div><span>本圈用时</span><strong id="pause-lap-time">00:00.000</strong></div>
+            <div><span>漂移得分</span><strong id="pause-score">0</strong></div>
+          </div>
+          <div class="pause-actions">
+            <button id="resume-button" class="primary-button" type="button">继续比赛</button>
+            <button id="restart-button" class="secondary-button" type="button">重新开始</button>
+            <button id="quit-button" class="text-button" type="button">返回主菜单</button>
+          </div>
+          <p class="pause-hint"><kbd>ESC</kbd> 继续</p>
+        </div>
+      </section>
+
+      <section id="results-modal" class="modal results-modal hidden" role="dialog" aria-modal="true" aria-labelledby="results-title">
+        <div class="modal-backdrop"></div>
+        <div class="results-card">
+          <div class="results-hero">
+            <p class="eyebrow">RACE COMPLETE</p>
+            <h2 id="results-title">冲线</h2>
+            <div class="finish-rank"><small>FINAL POSITION</small><strong id="finish-position">P1</strong></div>
+            <p id="results-copy">漂亮的走线。下一圈还能更快。</p>
+          </div>
+          <div class="results-body">
+            <div class="results-stats">
+              <div><span>总用时</span><strong id="finish-time">00:00.000</strong></div>
+              <div><span>最快单圈</span><strong id="finish-best-lap">00:00.000</strong></div>
+              <div><span>漂移得分</span><strong id="finish-score">0</strong></div>
+              <div><span>最高速度</span><strong id="finish-top-speed">0 <small>KM/H</small></strong></div>
+            </div>
+            <div class="leaderboard">
+              <div class="leaderboard-head"><span>名次</span><span>车手</span><span>差距</span></div>
+              <ol id="leaderboard-list"></ol>
+            </div>
+          </div>
+          <div class="results-actions">
+            <button id="race-again-button" class="primary-button" type="button">再跑一次</button>
+            <button id="results-menu-button" class="secondary-button" type="button">返回车库</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
