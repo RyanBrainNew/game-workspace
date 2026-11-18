@@ -717,7 +717,7 @@ export class RaceGame {
     if (player.drift.active) turnRate *= 1.36;
     if (speedAbs > 68) turnRate *= 0.93;
     const direction = player.speed >= 0 ? 1 : -1;
-    player.heading += player.steer * turnRate * direction * dt;
+    player.heading -= player.steer * turnRate * direction * dt;
     player.heading = ((player.heading + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
 
     const trackTangent = this.track.samples[player.nearestIndex].tangent;
@@ -944,7 +944,7 @@ export class RaceGame {
       player.lateral = side * (limit - 0.1);
       const tangentHeading = headingFromTangent(pose.tangent);
       player.course = lerpAngle(player.course, tangentHeading, 3, dt);
-      player.heading = lerpAngle(player.heading, tangentHeading + player.steer * 0.2, 3, dt);
+      player.heading = lerpAngle(player.heading, tangentHeading - player.steer * 0.2, 3, dt);
       if (this.raceElapsed - this.lastCollisionTime > 0.65) {
         player.speed *= 0.58;
         player.contactShake = 0.55;
@@ -1018,7 +1018,7 @@ export class RaceGame {
       wheel.rotation.x = spin;
     });
     userData.frontPivots?.forEach((pivot) => {
-      pivot.rotation.y = steer * 0.33;
+      pivot.rotation.y = -steer * 0.33;
     });
   }
 
@@ -1350,9 +1350,15 @@ export class RaceGame {
     this.player.course = this.player.heading;
     this.player.nearestIndex = pose.index;
     this.player.speed = 0;
+    this.player.steer = 0;
+    this.player.steeringVisual = 0;
     this.player.boosting = false;
     this.player.boostTime = 0;
+    this.player.miniBoostTime = 0;
     this.player.drift.active = false;
+    this.player.drift.time = 0;
+    this.player.wrongWay = false;
+    this.wrongWayClock = 0;
     this.player.contactShake = 0.2;
     this.playerCar.position.copy(this.player.position);
     this.audio?.boostEnd();
